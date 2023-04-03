@@ -4,13 +4,14 @@ from matplotlib import pyplot as plt
 import os
 import math
 
-train = True
+train = False
 dest = ''
 if(train):
     DB_ROOT = "../ear_dataset/left/cropped/"
+    dest = 'train'
 else:
     DB_ROOT = '../ear_dataset/test/left_cropped/'
-    dest='/test'
+    dest='test'
 #following is from https://docs.opencv2.org/4.x/da/d22/tutorial_py_canny.html
 
 def segmentMask(image):
@@ -111,32 +112,21 @@ def edge1(image_path='ref2.png'):
     # plt.subplot(122),plt.imshow(edges,cmap = 'gray')
     # plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
     # plt.show()
-    filename = image_path.split('/')
-    cv2.imwrite(f'features{dest}/edges/{filename[-2]}/{filename[-1]}', edges)
-    cv2.imwrite(f'features{dest}/angles/{filename[-2]}/{filename[-1]}', angles)
-
-def edge2(image_path='ref2.png'):
-    src = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    # Check if image is loaded fine
-    if src is None:
-        print ('Error opening image: ' + image_path)
-        return -1
     
+    # Check whether the specified path exists or not
+    filename = image_path.split('/')
+    opathe = f"features/{dest}/edges/{filename[-2]}/"
+    opatha = f"features/{dest}/angles/{filename[-2]}/"
+    if not os.path.exists(opathe):
+        # Create a new directory because it does not exist
+        os.makedirs(opathe)
+    if(os.path.exists(opatha) == False):
+        os.makedirs(opatha)
+    
+    cv2.imwrite(f'{opathe}{filename[-1]}', edges)
+    cv2.imwrite(f'{opatha}{filename[-1]}', angles)
 
-    src = cv2.GaussianBlur(src, (3, 3), 0)
-    gray = cv2.resize(cv2.cvtColor(src, cv2.COLOR_BGR2GRAY),(140,160))
-    grad_x = cv2.Sobel(gray, cv2.CV_16S, 1, 0, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
-    grad_y = cv2.Sobel(gray, cv2.CV_16S, 0, 1, ksize=3, scale=1, delta=0, borderType=cv2.BORDER_DEFAULT)
-    angles = np.zeros(grad_x.shape)
-    for i in range(grad_x.shape[0]):
-        for j in range(grad_x.shape[1]):
-            angles[angles] = math.atan2(grad_y, grad_x)
-    normalized_angles = cv2.normalize(angles, None, 0, 255,cv2.NORM_MINMAX, dtype=cv2.CV_8U)
 
-    return 0
-
-# edge1(DB_ROOT+'000/59rfb.png')
-# edge2(DB_ROOT+'000/59rfb.png')
 
 dirs = ['000','001','002','003','004','005','006','007','008','009','010','011','012']
 for dir in dirs:
